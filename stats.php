@@ -4,7 +4,6 @@ $website = "https://bloodmoonpack.com/grid/";
 $loginscreen = "https://bloodmoonpack.com/grid/";
 $robustURL   = "bloodmoonpack.com"; //FQDN or IP to your grid/robust server
 $robustPORT = "8002"; //port for your robust
-$website = "https://bloodmoonpack.com/grid/";
 $loginuri = "http://".$robustURL.":".$robustPORT."";
 //your database info
 $host = "localhost";
