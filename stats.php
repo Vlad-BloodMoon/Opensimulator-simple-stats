@@ -4,6 +4,7 @@ $website = "https://bloodmoonpack.com/grid/";
 $loginscreen = "https://bloodmoonpack.com/grid/";
 $robustURL   = "bloodmoonpack.com"; //FQDN or IP to your grid/robust server
 $robustPORT = "8002"; //port for your robust
+$website = "https://bloodmoonpack.com/grid/";
 $loginuri = "http://".$robustURL.":".$robustPORT."";
 //your database info
 $host = "localhost";
@@ -44,8 +45,8 @@ if ($preso = $mysqli->query("SELECT UserID FROM Presence")) {
 	$nowonlinescounter = $preso->num_rows;
 }
 $pastmonth = 0;
-if ($tpres = $mysqli->query("SELECT DISTINCT * FROM GridUser WHERE Logout < '".$monthago."'")) {
-	$pastmonth = $tpres->num_rows;
+if ($res = $mysqli->query("SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID NOT LIKE '%http%'")) {
+    $pastmonth = $res->num_rows;
 }
 $totalaccounts = 0;
 if ($useraccounts = $mysqli->query("SELECT * FROM UserAccounts")) {
