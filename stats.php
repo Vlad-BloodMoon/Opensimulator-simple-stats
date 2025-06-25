@@ -1,6 +1,5 @@
 <?php
 
-$website = "https://bloodmoonpack.com/grid/";
 $loginscreen = "https://bloodmoonpack.com/grid/";
 $robustURL   = "bloodmoonpack.com"; //FQDN or IP to your grid/robust server
 $robustPORT = "8002"; //port for your robust
