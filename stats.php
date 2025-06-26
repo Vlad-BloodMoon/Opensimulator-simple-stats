@@ -1,5 +1,5 @@
 <?php
-
+$gridTitle = "BloodMoon Grid Stats";
 $website = "https://bloodmoonpack.com/grid/";
 $loginscreen = "https://bloodmoonpack.com/grid/";
 $robustURL   = "bloodmoonpack.com";
@@ -130,7 +130,7 @@ if ($_GET['format'] == "json") {
         </style>
     </head>
     <body>
-        <h1>📊 BloodMoon Grid Stats</h1>
+        <h1>📊 <?php echo htmlspecialchars($gridTitle); ?></h1>
         <?php
         foreach($arr as $k => $v) {
             echo '<p><b>'.$k.': </b>'.$v.'</p>';
