@@ -80,7 +80,8 @@ $arr = [
     'Regions' => number_format($totalregions),
     'Var_Regions' => number_format($totalvarregions),
     'Single_Regions' => number_format($totalsingleregions),
-    'Total_LandSize(km2)' => number_format($totalsize),
+    //'Total_LandSize(km2)' => number_format($totalsize),
+    'Total_LandSize(km2)' => number_format($totalsize, 2),
     'Login_URL' => $loginuri,
     'Website' => '<i><a href='.$website.'>'.$website.'</a></i>',
     'Login_Screen' => '<i><a href='.$loginscreen.'>'.$loginscreen.'</a></i>'
