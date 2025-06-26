@@ -65,7 +65,7 @@ if ($regiondb = $mysqli->query("SELECT * FROM regions")) {
             ++$totalvarregions;
         }
         $rsize = $regions['sizeX'] * $regions['sizeY'];
-        $totalsize += $rsize / 1000;
+        $totalsize += $rsize / 1000000;
     }
 }
 
