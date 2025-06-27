@@ -2,6 +2,7 @@
 Simple page de statistique pour grille Opensimulator 
 
 Exemple ici : https://bloodmoonpack.com/grid/stats.php
+Ou :  https://bloodmoonpack.com/grid/stats2.php
 
 
 📝 Comment personnaliser  ?
