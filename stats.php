@@ -1,64 +1,64 @@
 <?php
 // =================== CONFIGURATION ===================
-$gridTitle      = "BloodMoon Grid Stats";
-$website        = "https://bloodmoonpack.com/grid/";
-$loginscreen    = "https://bloodmoonpack.com/grid/";
-$robustURL      = "bloodmoonpack.com";
-$robustPORT     = "8002";
-$loginuri       = "http://".$robustURL.":".$robustPORT;
+$gridTitle         = "BloodMoon Grid Stats";
+$website           = "https://bloodmoonpack.com/grid/";
+$loginscreen       = "https://bloodmoonpack.com/grid/";
+$robustURL         = "bloodmoonpack.com";
+$robustPORT        = "8002";
+$loginuri          = "http://".$robustURL.":".$robustPORT;
 
 // Base de données
 $host = "localhost";
-$user = "dbuser";
-$pass = "dbpassword";
+$user = "dbuser";        // à personnaliser
+$pass = "dbpassword";    // à personnaliser
 $dbname = "robust";
 $mysqli = new mysqli($host, $user, $pass, $dbname);
 
 // Apparence personnalisable
-$bgColor        = "#111";
-$textColor      = "#eee";
-$linkColor      = "#6699ff";
-$accentColor    = "#ff6666";
-$fontFamily     = "Arial, sans-serif";
-$landDecimals   = 2;
-$numberDecimals = 0;
+$bgColor          = "#111"; // fond de la page
+$textColor        = "#eee"; // texte général
+$linkColor        = "#6699ff"; // liens
+$accentColor      = "#ff6666"; // couleur des <b>
+$fontFamily       = "Arial, sans-serif";
 
-// =================== ÉTAT GRILLE ===================
+$cardBgColor      = "rgba(255, 255, 255, 0.05)"; // fond carte
+$cardTextAlign    = "center";
+$cardBorderRadius = "16px";
+$cardShadow       = "0 0 20px rgba(0, 0, 0, 0.6)";
+$cardMaxWidth     = "600px";
+$cardPadding      = "40px";
+
+$landDecimals     = 2;  // km²
+$numberDecimals   = 0;  // autres valeurs
+
+// =================== STATS GRID ===================
 $socket = @fsockopen($robustURL, $robustPORT, $errno, $errstr, 1);
 $gstatus = is_resource($socket) ? "ONLINE" : "OFFLINE";
 $color = is_resource($socket) ? "green" : "red";
 @fclose($socket);
 
-// =================== STATS ===================
 $monthago = time() - 2592000;
 
-// Visiteurs HG actifs
 $preshguser = 0;
-$sql = "SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID LIKE '%http%'";
-if ($res = $mysqli->query($sql)) {
+if ($res = $mysqli->query("SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID LIKE '%http%'")) {
     $preshguser = $res->num_rows;
 }
 
-// Locaux actifs
 $pastmonth = 0;
-$sql = "SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID NOT LIKE '%http%'";
-if ($res = $mysqli->query($sql)) {
+if ($res = $mysqli->query("SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID NOT LIKE '%http%'")) {
     $pastmonth = $res->num_rows;
 }
 
-// En ligne maintenant
 $nowonlinescounter = 0;
 if ($res = $mysqli->query("SELECT UserID FROM Presence")) {
     $nowonlinescounter = $res->num_rows;
 }
 
-// Comptes locaux
 $totalaccounts = 0;
 if ($res = $mysqli->query("SELECT * FROM UserAccounts")) {
     $totalaccounts = $res->num_rows;
 }
 
-// Régions et surface
 $totalregions = $totalvarregions = $totalsingleregions = 0;
 $totalsize = 0;
 if ($res = $mysqli->query("SELECT sizeX, sizeY FROM regions")) {
@@ -69,11 +69,10 @@ if ($res = $mysqli->query("SELECT sizeX, sizeY FROM regions")) {
         } else {
             ++$totalvarregions;
         }
-        $totalsize += ($r['sizeX'] * $r['sizeY']) / 1000000;
+        $totalsize += ($r['sizeX'] * $r['sizeY']) / 1000000; // en km²
     }
 }
 
-// =================== DONNÉES À AFFICHER ===================
 $arr = [
     'GridStatus'               => '<b><font color="'.$color.'">'.$gstatus.'</font></b>',
     'Online_Now'               => number_format($nowonlinescounter, $numberDecimals),
@@ -90,7 +89,7 @@ $arr = [
     'Login_Screen'             => '<i><a href="'.$loginscreen.'">'.$loginscreen.'</a></i>'
 ];
 
-// =================== FORMATS ===================
+// =================== SORTIES JSON / XML ===================
 if (isset($_GET['format']) && $_GET['format'] === "json") {
     header('Content-type: application/json');
     echo json_encode($arr);
@@ -103,7 +102,6 @@ if (isset($_GET['format']) && $_GET['format'] === "xml") {
     exit;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -123,13 +121,13 @@ if (isset($_GET['format']) && $_GET['format'] === "xml") {
             margin: 0;
         }
         .card {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
-            padding: 40px;
-            max-width: 600px;
+            background-color: <?php echo $cardBgColor; ?>;
+            border-radius: <?php echo $cardBorderRadius; ?>;
+            box-shadow: <?php echo $cardShadow; ?>;
+            padding: <?php echo $cardPadding; ?>;
+            max-width: <?php echo $cardMaxWidth; ?>;
             width: 90%;
-            text-align: center;
+            text-align: <?php echo $cardTextAlign; ?>;
             backdrop-filter: blur(4px);
         }
         h1 {
