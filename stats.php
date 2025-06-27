@@ -148,6 +148,18 @@ if (isset($_GET['format']) && $_GET['format'] === "xml") {
         a {
             color: <?php echo $linkColor; ?>;
         }
+     body {
+     background: <?php echo $bgColor; ?>;
+     color: <?php echo $textColor; ?>;
+     font-family: <?php echo $fontFamily; ?>;
+     padding: 20px;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: flex-start;
+     min-height: 100vh;
+     text-align: center;
+      }
     </style>
 </head>
 <body>
