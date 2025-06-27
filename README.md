@@ -5,6 +5,7 @@ Exemple ici : https://bloodmoonpack.com/grid/stats.php
 
 
 📝 Comment personnaliser  ?
+
 Couleur de fond :  $bgColor.
 
 Couleur du texte : $textColor.
