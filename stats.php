@@ -1,19 +1,39 @@
 <?php
-$gridTitle = "BloodMoon Grid Stats";
-$website = "https://bloodmoonpack.com/grid/";
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+/* ========================================================
+ *        PARAMÈTRES TECHNIQUES DE LA GRILLE
+ * ====================================================== */
+$gridTitle   = "BloodMoon Grid Stats";
+$website     = "https://bloodmoonpack.com/grid/";
 $loginscreen = "https://bloodmoonpack.com/grid/";
 $robustURL   = "bloodmoonpack.com";
 $robustPORT  = "8002";
-$loginuri = "http://".$robustURL.":".$robustPORT;
+$loginuri    = "http://".$robustURL.":".$robustPORT;
 
-// Connexion base de données
-$host = "localhost";
-$user = "dbuser";
-$pass = "dbpassword";
+/* ---------  Base de données ---------- */
+$host   = "localhost";
+$user   = "dbuser";
+$pass   = "dbpassword";
 $dbname = "robust";
 $mysqli = new mysqli($host, $user, $pass, $dbname);
 
-// Test Online/Offline
+/* ========================================================
+ *        PARAMÈTRES D’AFFICHAGE (faciles à éditer)
+ * ====================================================== */
+$bgColor       = "#D3D3D3";        // Couleur de fond
+$textColor     = "#00008B";        // Couleur du texte
+$linkColor     = "#850606";     // Couleur des liens
+$accentColor   = "#000000";     // Couleur des éléments en gras <b>
+$fontFamily    = "Arial, sans-serif";
+$landDecimals  = 2;             // Décimales pour la surface en km²
+$numberDecimals= 0;             // Décimales pour les autres grands nombres
+
+/* ========================================================
+ *           RÉCUPÉRATION DES STATS
+ * ====================================================== */
+/* État de la grille */
 $socket = @fsockopen($robustURL, $robustPORT, $errno, $errstr, 1);
 if (is_resource($socket)) {
     $gstatus = "ONLINE";
@@ -24,121 +44,135 @@ if (is_resource($socket)) {
 }
 @fclose($socket);
 
-// Calcul des utilisateurs actifs sur les 30 derniers jours
-$monthago = time() - 2592000; // 30 jours en secondes
+/* Période : 30 jours */
+$monthago = time() - 2592000;
 
-// Visiteurs hypergrid actifs
+/* Visiteurs HG actifs */
 $preshguser = 0;
-if ($res = $mysqli->query("SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID LIKE '%http%'")) {
+$sql = "SELECT DISTINCT UserID
+        FROM GridUser
+        WHERE Logout > $monthago
+          AND UserID LIKE '%http%'";
+if ($res = $mysqli->query($sql)) {
     $preshguser = $res->num_rows;
 }
 
-// Utilisateurs locaux actifs
+/* Utilisateurs locaux actifs */
 $pastmonth = 0;
-if ($res = $mysqli->query("SELECT DISTINCT UserID FROM GridUser WHERE Logout > $monthago AND UserID NOT LIKE '%http%'")) {
+$sql = "SELECT DISTINCT UserID
+        FROM GridUser
+        WHERE Logout > $monthago
+          AND UserID NOT LIKE '%http%'";
+if ($res = $mysqli->query($sql)) {
     $pastmonth = $res->num_rows;
 }
 
-// Utilisateurs actuellement connectés
+/* En ligne maintenant */
 $nowonlinescounter = 0;
-if ($preso = $mysqli->query("SELECT UserID FROM Presence")) {
-    $nowonlinescounter = $preso->num_rows;
+if ($res = $mysqli->query("SELECT UserID FROM Presence")) {
+    $nowonlinescounter = $res->num_rows;
 }
 
-// Comptes enregistrés
+/* Comptes locaux enregistrés */
 $totalaccounts = 0;
-if ($useraccounts = $mysqli->query("SELECT * FROM UserAccounts")) {
-    $totalaccounts = $useraccounts->num_rows;
+if ($res = $mysqli->query("SELECT * FROM UserAccounts")) {
+    $totalaccounts = $res->num_rows;
 }
 
-// Régions
-$totalregions = 0;
-$totalvarregions = 0;
-$totalsingleregions = 0;
+/* Régions et surface */
+$totalregions = $totalvarregions = $totalsingleregions = 0;
 $totalsize = 0;
-if ($regiondb = $mysqli->query("SELECT * FROM regions")) {
-    while ($regions = $regiondb->fetch_array()) {
+if ($regiondb = $mysqli->query("SELECT sizeX, sizeY FROM regions")) {
+    while ($r = $regiondb->fetch_assoc()) {
         ++$totalregions;
-        if ($regions['sizeX'] == 256) {
+        if ($r['sizeX'] == 256) {
             ++$totalsingleregions;
         } else {
             ++$totalvarregions;
         }
-        $rsize = $regions['sizeX'] * $regions['sizeY'];
-        $totalsize += $rsize / 1000000;
+        $totalsize += ($r['sizeX'] * $r['sizeY']) / 1_000_000; // km²
     }
 }
 
-// Données à afficher
+/* Tableau final */
 $arr = [
-    'GridStatus' => '<b><font color="'.$color.'">'.$gstatus.'</b></font>',
-    'Online_Now' => number_format($nowonlinescounter),
-    'HG_Visitors_Last_30_Days' => number_format($preshguser),
-    'Local_Users_Last_30_Days' => number_format($pastmonth),
-    'Total_Active_Last_30_Days' => number_format($pastmonth + $preshguser),
-    'Registered_Users' => number_format($totalaccounts),
-    'Regions' => number_format($totalregions),
-    'Var_Regions' => number_format($totalvarregions),
-    'Single_Regions' => number_format($totalsingleregions),
-    //'Total_LandSize(km2)' => number_format($totalsize),
-    'Total_LandSize(km2)' => number_format($totalsize, 2),
-    'Login_URL' => $loginuri,
-    'Website' => '<i><a href='.$website.'>'.$website.'</a></i>',
-    'Login_Screen' => '<i><a href='.$loginscreen.'>'.$loginscreen.'</a></i>'
+    'GridStatus'               => '<b><font color="'.$color.'">'.$gstatus.'</font></b>',
+    'Online_Now'               => number_format($nowonlinescounter, $numberDecimals),
+    'HG_Visitors_Last_30_Days'  => number_format($preshguser,        $numberDecimals),
+    'Local_Users_Last_30_Days'  => number_format($pastmonth,         $numberDecimals),
+    'Total_Active_Last_30_Days' => number_format($pastmonth + $preshguser, $numberDecimals),
+    'Registered_Users'         => number_format($totalaccounts,     $numberDecimals),
+    'Regions'                  => number_format($totalregions,      $numberDecimals),
+    'Var_Regions'              => number_format($totalvarregions,   $numberDecimals),
+    'Single_Regions'           => number_format($totalsingleregions,$numberDecimals),
+    'Total_LandSize(km2)'      => number_format($totalsize,         $landDecimals),
+    'Login_URL'                => $loginuri,
+    'Website'                  => '<i><a href="'.$website.'">'.$website.'</a></i>',
+    'Login_Screen'             => '<i><a href="'.$loginscreen.'">'.$loginscreen.'</a></i>'
 ];
 
-// Formats d'export
-if ($_GET['format'] == "json") {
+/* ========================================================
+ *      SORTIE : JSON, XML ou HTML
+ * ====================================================== */
+if (isset($_GET['format']) && $_GET['format'] === "json") {
     header('Content-type: application/json');
     echo json_encode($arr);
-} else if ($_GET['format'] == "xml") {
-    function array2xml($array, $wrap='Stats', $upper=true) {
-        $xml = '';
-        if ($wrap != null) $xml .= "<$wrap>\n";
-        foreach ($array as $key => $value) {
-            if ($upper) $key = strtoupper($key);
-            $xml .= "<$key>" . htmlspecialchars(trim($value)) . "</$key>";
-        }
-        if ($wrap != null) $xml .= "\n</$wrap>\n";
-        return $xml;
-    }
+    exit;
+}
+
+if (isset($_GET['format']) && $_GET['format'] === "xml") {
     header('Content-type: text/xml');
     echo array2xml($arr);
-} else {
-    // Affichage HTML par défaut
-    ?>
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Stats</title>
-        <link rel="icon" href="./img/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-            body {
-                background: #111;
-                color: #eee;
-                font-family: Arial, sans-serif;
-                padding: 20px;
-            }
-            b {
-                color: #ff6666;
-            }
-            a {
-                color: #6699ff;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>📊 <?php echo htmlspecialchars($gridTitle); ?></h1>
-        <?php
-        foreach($arr as $k => $v) {
-            echo '<p><b>'.$k.': </b>'.$v.'</p>';
-        }
-        ?>
-    </body>
-    </html>
-    <?php
+    exit;
 }
+
+/* ----------  Page HTML par défaut ---------- */
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stats</title>
+    <link rel="icon" href="./img/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: <?php echo $bgColor; ?>;
+            color: <?php echo $textColor; ?>;
+            font-family: <?php echo $fontFamily; ?>;
+            padding: 20px;
+        }
+        b {
+            color: <?php echo $accentColor; ?>;
+        }
+        a {
+            color: <?php echo $linkColor; ?>;
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 <?php echo htmlspecialchars($gridTitle); ?></h1>
+    <?php
+    foreach ($arr as $k => $v) {
+        echo '<p><b>'.$k.': </b>'.$v.'</p>';
+    }
+    ?>
+</body>
+</html>
+<?php
+/* ========================================================
+ *             Fonctions utilitaires
+ * ====================================================== */
+function array2xml($array, $wrap='Stats', $upper=true) {
+    $xml = ($wrap !== null) ? "<$wrap>\n" : '';
+    foreach ($array as $key => $value) {
+        $tag = $upper ? strtoupper($key) : $key;
+        $xml .= "<$tag>" . htmlspecialchars(trim($value)) . "</$tag>";
+    }
+    $xml .= ($wrap !== null) ? "\n</$wrap>" : '';
+    return $xml;
+}
+
 $mysqli->close();
 ?>
+
